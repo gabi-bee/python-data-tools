@@ -1,3 +1,3 @@
 # python-etl-pipeline
 
-simple ETL pipeline ro ingest csvs to SQL
+simple ETL pipeline to ingest csvs to SQL

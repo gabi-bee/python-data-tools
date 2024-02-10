@@ -32,6 +32,38 @@ class DfUtilsTests(unittest.TestCase):
         for case in test_cases:
             self.assertDictEqual(get_dtype_cols_dict(**case['args']), case['returns'])
 
+    def test_reshape_with_expected_cols(self):
+        """test reshape_with_expected_cols fn"""
+
+        test_cases: list[dict[str, any]] = [
+            {'args': {'df': pd.DataFrame.from_dict({'c': [0]}), 'expected_cols': ['a', 'b', 'c']},
+             'returns': pd.DataFrame.from_dict({'a': [np.nan], 'b': [np.nan], 'c': [0]})},
+
+            {'args': {'df': pd.DataFrame.from_dict({'c': [0]}), 'expected_cols': ['a', 'b', 'c'], 'reshape': False},
+             'returns': pd.DataFrame.from_dict({'c': [0], 'a': [np.nan], 'b': [np.nan]})},
+
+            {'args': {'df': pd.DataFrame.from_dict({'c': [0], 'd': [0]}), 'expected_cols': ['a', 'b', 'c']},
+             'returns': pd.DataFrame.from_dict({'a': [np.nan], 'b': [np.nan], 'c': [0], 'd': [0]})},
+
+            {'args': {'df': pd.DataFrame.from_dict({'c': [0], 'd': [0]}),
+                      'expected_cols': ['a', 'b', 'c'], 'reshape': False},
+             'returns': pd.DataFrame.from_dict({'c': [0], 'd': [0], 'a': [np.nan], 'b': [np.nan]})},
+
+            {'args': {'df': pd.DataFrame.from_dict({'c': [0], 'd': [0]}),
+                      'expected_cols': ['a', 'b', 'c'], 'drop_unexpected': True},
+             'returns': pd.DataFrame.from_dict({'a': [np.nan], 'b': [np.nan], 'c': [0]})},
+
+            {'args': {'df': pd.DataFrame.from_dict({'c': [0], 'd': [0]}),
+                      'expected_cols': ['a', 'b', 'c'], 'reshape': False, 'drop_unexpected': True},
+             'returns': pd.DataFrame.from_dict({'c': [0], 'a': [np.nan], 'b': [np.nan]})},
+        ]
+
+        # test return equals expected
+        for case in test_cases:
+            result: pd.DataFrame = reshape_with_expected_cols(**case['args'])
+            expected_result = case['returns']
+            self.assertTrue(result.equals(expected_result))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -33,7 +33,7 @@ class DfUtilsTests(unittest.TestCase):
             self.assertDictEqual(get_dtype_cols_dict(**case['args']), case['returns'])
 
     def test_reshape_with_expected_cols(self):
-        """test reshape_with_expected_cols fn"""
+        """test update_with_expected_cols fn"""
 
         test_cases: list[dict[str, any]] = [
             {'args': {'df': pd.DataFrame.from_dict({'c': [0]}), 'expected_cols': ['a', 'b', 'c']},
@@ -60,7 +60,7 @@ class DfUtilsTests(unittest.TestCase):
 
         # test return equals expected
         for case in test_cases:
-            result: pd.DataFrame = reshape_with_expected_cols(**case['args'])
+            result: pd.DataFrame = update_with_expected_cols(**case['args'])
             expected_result = case['returns']
             self.assertTrue(result.equals(expected_result))
 

@@ -32,6 +32,12 @@ class DfChecksTests(unittest.TestCase):
             'int1': [0, 1],
             'int2': [1, np.nan],
         },
+        'ex_float_max_dps_examples': {
+            'float1': ['0.1', '1'],
+            'float2': ['0.1', '0.1234'],
+            'float3': ['0.1234', np.nan],
+            'int1': ['1', np.nan],
+        },
     }
     dfs = {key: pd.DataFrame.from_dict(value) for key, value in _dict_to_df_examples.items()}
 
@@ -123,6 +129,22 @@ class DfChecksTests(unittest.TestCase):
             self.assertEqual(str_len_min.name, 'str_len_min')
             self.assertEqual(str_len_max.name, 'str_len_max')
             self.assertEqual(str_len_checksum.name, 'str_len_checksum')
+
+    def test_check_float_max_dps(self):
+        """test check_float_max_dps fn"""
+
+        test_cases: list[dict[str, any]] = [
+            {'args': {'df_str': self.dfs['ex_float_max_dps_examples']},
+             'returns': pd.Series(data={'float1': 1, 'float2': 4, 'float3': 4, 'int1': 0})},
+        ]
+
+        # test return equals expected
+        for case in test_cases:
+            [result] = check_float_max_dps(**case['args'])  # single check in list
+            expected_result = case['returns']
+
+            self.assertTrue(result.astype(int).equals(expected_result))
+            self.assertEqual(result.name, 'float_max_dps')
 
 
 if __name__ == '__main__':

@@ -55,6 +55,23 @@ class DfChecksTests(unittest.TestCase):
             else:
                 self.assertEqual(result, expected_result)
 
+    def test_get_str_len(self):
+        """test get_str_len fn"""
+        test_cases: list[dict[str, any]] = [
+            {'args': {'x': '1'}, 'returns': 1},
+            {'args': {'x': '01'}, 'returns': 2},
+            {'args': {'x': np.nan}, 'returns': np.nan},
+        ]
+
+        # test return equals expected
+        for case in test_cases:
+            result = get_str_len(**case['args'])
+            expected_result = case['returns']
+            if pd.isna(expected_result):
+                self.assertTrue(pd.isna(result))
+            else:
+                self.assertEqual(result, expected_result)
+
     # test individual check functions ----------------------------------------------------------------------------------
     def test_check_int_leading_zeros(self):
         """test check_int_leading_zeros fn"""

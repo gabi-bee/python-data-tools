@@ -11,6 +11,14 @@ class DfChecksTests(unittest.TestCase):
         'ex_inf_int1': {'int1': [0, 1]},
         'ex_str_int1': {'int1': ['0', '1']},
         'ex_str_int1_leading0s': {'int1': ['0', '01']},
+        'ex_str_leading0s_examples': {
+            'int1': ['0', '1', '01'],
+            'int2': ['0', '1', '001'],
+            'int3': ['0', '01', np.nan],
+            'int4': ['0', '01', '01'],
+            'int5': ['0', '1', '2'],
+            'int6': ['1', '2', '3']
+        },
     }
     dfs = {key: pd.DataFrame.from_dict(value) for key, value in _dict_to_df_examples.items()}
 
@@ -38,39 +46,6 @@ class DfChecksTests(unittest.TestCase):
             print(f'\nresult: \n{result}')
 
     # test helper functions --------------------------------------------------------------------------------------------
-    def test_match_leading_zeros(self):
-        """test match_leading_zeros fn"""
-        test_cases: list[dict[str, any]] = [
-            {'args': {'x': '1'}, 'returns': 0},
-            {'args': {'x': '01'}, 'returns': 1},
-            {'args': {'x': np.nan}, 'returns': np.nan},
-        ]
-
-        # test return equals expected
-        for case in test_cases:
-            result = match_leading_zeros(**case['args'])
-            expected_result = case['returns']
-            if pd.isna(expected_result):
-                self.assertTrue(pd.isna(result))
-            else:
-                self.assertEqual(result, expected_result)
-
-    def test_get_str_len(self):
-        """test get_str_len fn"""
-        test_cases: list[dict[str, any]] = [
-            {'args': {'x': '1'}, 'returns': 1},
-            {'args': {'x': '01'}, 'returns': 2},
-            {'args': {'x': np.nan}, 'returns': np.nan},
-        ]
-
-        # test return equals expected
-        for case in test_cases:
-            result = get_str_len(**case['args'])
-            expected_result = case['returns']
-            if pd.isna(expected_result):
-                self.assertTrue(pd.isna(result))
-            else:
-                self.assertEqual(result, expected_result)
 
     # test individual check functions ----------------------------------------------------------------------------------
     def test_check_int_leading_zeros(self):
@@ -79,6 +54,8 @@ class DfChecksTests(unittest.TestCase):
         test_cases: list[dict[str, any]] = [
             {'args': {'df_str': self.dfs['ex_str_int1']}, 'returns': pd.Series(data={'int1': 0})},
             {'args': {'df_str': self.dfs['ex_str_int1_leading0s']}, 'returns': pd.Series(data={'int1': 1})},
+            {'args': {'df_str': self.dfs['ex_str_leading0s_examples']},
+             'returns': pd.Series(data={'int1': 1, 'int2': 1, 'int3': 1, 'int4': 2, 'int5': 0, 'int6': 0})},
         ]
 
         # test return equals expected
@@ -86,7 +63,7 @@ class DfChecksTests(unittest.TestCase):
             result: pd.Series = check_int_leading_zeros(**case['args'])[0]
             expected_result = case['returns']
 
-            self.assertTrue(result.equals(expected_result))
+            self.assertTrue(result.astype(int).equals(expected_result))
             self.assertEqual(result.name, 'int_leading_zeros')
 
 

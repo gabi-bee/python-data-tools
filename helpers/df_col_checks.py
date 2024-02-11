@@ -1,10 +1,10 @@
-import re
 from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
 
 from utils.df_utils import get_dtype_cols_dict, update_with_expected_cols
+from utils.str_utils import flag_leading_zeros
 
 # columns expected in final results
 expected_columns: dict[str, type] = {  # TODO update
@@ -91,22 +91,6 @@ def run_checks_on_cols(df: pd.DataFrame, *checks: Callable[[pd.DataFrame], list[
 
 
 # util functions -------------------------------------------------------------------------------------------------------
-def match_leading_zeros(x: str):
-    """return flag: 0 if no leading 0s, 1 if leading 0s, na if na"""
-    if pd.isna(x):
-        return np.nan
-    elif re.match('^0[0-9]+', x):
-        return 1
-    else:
-        return 0
-
-
-def get_str_len(x: str):
-    """get len of string x, return x if na"""
-    if pd.isna(x):
-        return np.nan
-    else:
-        return len(x)
 
 
 # individual check functions -------------------------------------------------------------------------------------------
@@ -119,14 +103,14 @@ def check_all_dtypes(df_inferred: pd.DataFrame) -> list[pd.Series]:
 
 def check_int_leading_zeros(df_str: pd.DataFrame) -> list[pd.Series]:
     """get col count of values with leading 0s"""
-    int_leading_zeros = df_str.map(match_leading_zeros).sum()
+    int_leading_zeros = df_str.map(lambda x: flag_leading_zeros(x) if not pd.isna(x) else np.nan).sum()
     int_leading_zeros.name = 'int_leading_zeros'
     return [int_leading_zeros]
 
 
 def check_str_len_min_max_checksum(df_str: pd.DataFrame) -> list[pd.Series]:
     """get col min string length, max string length and checksum of string lengths"""
-    df_lens = df_str.map(get_str_len)
+    df_lens = df_str.map(lambda x: str(x) if not pd.isna(x) else np.nan)
 
     str_len_min = df_lens.min()
     str_len_min.name = 'str_len_min'

@@ -19,6 +19,19 @@ class DfChecksTests(unittest.TestCase):
             'int5': ['0', '1', '2'],
             'int6': ['1', '2', '3']
         },
+        'ex_str_len_examples': {
+            'str1': ['', '1', '12'],
+            'str2': ['1', '1', np.nan],
+            'str3': ['123456789', '123456789', np.nan],
+        },
+        'ex_all_dtype_examples': {
+            'str1': ['a', 'b'],
+            'str2': ['a', np.nan],
+            'float1': [0.1, 1],
+            'float2': [0.1, np.nan],
+            'int1': [0, 1],
+            'int2': [1, np.nan],
+        },
     }
     dfs = {key: pd.DataFrame.from_dict(value) for key, value in _dict_to_df_examples.items()}
 
@@ -45,9 +58,30 @@ class DfChecksTests(unittest.TestCase):
             # expected_result = case['returns']
             print(f'\nresult: \n{result}')
 
+            # TODO add tests
+
     # test helper functions --------------------------------------------------------------------------------------------
 
     # test individual check functions ----------------------------------------------------------------------------------
+    def test_check_all_dtypes(self):
+        """test check_all_dtypes fn"""
+
+        test_cases: list[dict[str, any]] = [
+            {'args': {'df_inferred': self.dfs['ex_all_dtype_examples']},
+             'returns': pd.Series(data={'str1': 'object', 'str2': 'object',
+                                        'float1': 'float64', 'float2': 'float64',
+                                        'int1': 'int64', 'int2': 'float64'  # int2 inferred as float64 due to np.nan
+                                        })},
+        ]
+
+        # test return equals expected
+        for case in test_cases:
+            [result] = check_all_dtypes(**case['args'])  # single check in list
+            expected_result = case['returns']
+
+            self.assertTrue(result.equals(expected_result))
+            self.assertEqual(result.name, 'dtype_py_inferred')
+
     def test_check_int_leading_zeros(self):
         """test check_int_leading_zeros fn"""
 
@@ -60,11 +94,35 @@ class DfChecksTests(unittest.TestCase):
 
         # test return equals expected
         for case in test_cases:
-            result: pd.Series = check_int_leading_zeros(**case['args'])[0]
+            [result] = check_int_leading_zeros(**case['args'])  # single check in list
             expected_result = case['returns']
 
             self.assertTrue(result.astype(int).equals(expected_result))
             self.assertEqual(result.name, 'int_leading_zeros')
+
+    def test_check_str_len_min_max_checksum(self):
+        """test check_str_len_min_max_checksum fn"""
+
+        test_cases: list[dict[str, any]] = [
+            {'args': {'df_str': self.dfs['ex_str_len_examples']},
+             'returns': {
+                 'min': pd.Series(data={'str1': 0, 'str2': 1, 'str3': 9}),  # min
+                 'max': pd.Series(data={'str1': 2, 'str2': 1, 'str3': 9}),  # max
+                 'sum': pd.Series(data={'str1': 3, 'str2': 2, 'str3': 18}),  # checksum
+             }},
+        ]
+
+        # test return equals expected
+        for case in test_cases:
+            [str_len_min, str_len_max, str_len_checksum] = check_str_len_min_max_checksum(**case['args'])
+            expected_results = case['returns']
+
+            self.assertTrue(str_len_min.astype(int).equals(expected_results['min']))
+            self.assertTrue(str_len_max.astype(int).equals(expected_results['max']))
+            self.assertTrue(str_len_checksum.astype(int).equals(expected_results['sum']))
+            self.assertEqual(str_len_min.name, 'str_len_min')
+            self.assertEqual(str_len_max.name, 'str_len_max')
+            self.assertEqual(str_len_checksum.name, 'str_len_checksum')
 
 
 if __name__ == '__main__':

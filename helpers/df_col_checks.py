@@ -65,7 +65,7 @@ def run_suite_of_df_col_checks(df_inferred: pd.DataFrame, df_str: pd.DataFrame, 
 def run_checks_on_cols(df: pd.DataFrame, *checks: Callable[[pd.DataFrame], list[pd.Series | pd.DataFrame]],
                        columns: list[str] = None, all_columns: bool = False) -> list[pd.Series | pd.DataFrame]:
     """
-
+    # TODO update Docstring and add test
     :param df:
     :param checks:
     :param columns:
@@ -90,13 +90,10 @@ def run_checks_on_cols(df: pd.DataFrame, *checks: Callable[[pd.DataFrame], list[
     return results
 
 
-# util functions -------------------------------------------------------------------------------------------------------
-
-
 # individual check functions -------------------------------------------------------------------------------------------
 def check_all_dtypes(df_inferred: pd.DataFrame) -> list[pd.Series]:
     """get col dtypes (python inferred)"""
-    dtypes = df_inferred.dtypes
+    dtypes = df_inferred.dtypes.map(lambda x: x.name)
     dtypes.name = 'dtype_py_inferred'
     return [dtypes]
 
@@ -110,7 +107,7 @@ def check_int_leading_zeros(df_str: pd.DataFrame) -> list[pd.Series]:
 
 def check_str_len_min_max_checksum(df_str: pd.DataFrame) -> list[pd.Series]:
     """get col min string length, max string length and checksum of string lengths"""
-    df_lens = df_str.map(lambda x: str(x) if not pd.isna(x) else np.nan)
+    df_lens = df_str.map(lambda x: len(x) if not pd.isna(x) else np.nan)
 
     str_len_min = df_lens.min()
     str_len_min.name = 'str_len_min'

@@ -16,7 +16,7 @@ class DfChecksTests(unittest.TestCase):
 
     # test main functions ----------------------------------------------------------------------------------------------
     def test_run_suite_df_col_checks(self):
-        """test run_suite_df_col_checks fn"""
+        """test run_suite_of_df_col_checks fn"""
 
         test_cases: list[dict[str, any]] = [
             {'args': {'df_inferred': pd.DataFrame.from_dict({'col1': [0, 0], 'col2': [1, 1]}),
@@ -33,7 +33,7 @@ class DfChecksTests(unittest.TestCase):
             print(f'\n\ncase: {i}')
             print(f'\ndf_inferred: \n{case["args"]["df_inferred"]}')
             print(f'\ndf_str: \n{case["args"]["df_str"]}')
-            result: pd.DataFrame = run_suite_df_col_checks(**case['args'])
+            result: pd.DataFrame = run_suite_of_df_col_checks(**case['args'])
             # expected_result = case['returns']
             print(f'\nresult: \n{result}')
 

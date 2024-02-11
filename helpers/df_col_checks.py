@@ -17,7 +17,7 @@ expected_columns: dict[str, type] = {  # TODO update
 
 
 # main functions -------------------------------------------------------------------------------------------------------
-def run_suite_df_col_checks(df_inferred: pd.DataFrame, df_str: pd.DataFrame) -> pd.DataFrame:
+def run_suite_of_df_col_checks(df_inferred: pd.DataFrame, df_str: pd.DataFrame) -> pd.DataFrame:
     """
     runs checks on
     :param df_inferred: python inferred dtype df
@@ -37,6 +37,8 @@ def run_suite_df_col_checks(df_inferred: pd.DataFrame, df_str: pd.DataFrame) -> 
     all_col_checks_df_inferred: list[Callable] = [check_all_dtypes, lambda x: [x.describe(include='all').transpose()]]
     results += run_checks_on_cols(df_inferred, *all_col_checks_df_inferred, all_columns=True)
 
+    # TODO run checks on numeric cols
+
     # run checks for each dtype cols (python inferred)
     dtypes_dict: dict[str, list[str]] = get_dtype_cols_dict(df_inferred, expected_keys=list(dtype_checks_dict.keys()))
     for dtype, dtype_checks in dtype_checks_dict.items():
@@ -53,7 +55,7 @@ def run_suite_df_col_checks(df_inferred: pd.DataFrame, df_str: pd.DataFrame) -> 
 
 
 # helper functions -----------------------------------------------------------------------------------------------------
-def run_checks_on_cols(df: pd.DataFrame, *checks: Callable[[pd.DataFrame], list[pd.Series]],
+def run_checks_on_cols(df: pd.DataFrame, *checks: Callable[[pd.DataFrame], list[pd.Series | pd.DataFrame]],
                        columns: list[str] = None, all_columns: bool = False) -> list[pd.Series | pd.DataFrame]:
     """
 
@@ -126,3 +128,15 @@ def check_str_len_min_max_checksum(df_str: pd.DataFrame) -> list[pd.Series]:
     str_len_checksum.name = 'str_len_checksum'
 
     return [str_len_min, str_len_max, str_len_checksum]
+
+
+def check_float_max_dps(df_str: pd.DataFrame) -> list[pd.Series]:
+    pass  # TODO
+
+
+def check_numeric_checksum(df_inferred: pd.DataFrame) -> list[pd.Series]:
+    pass  # TODO
+
+
+def check_numeric_max(df_inferred: pd.DataFrame) -> list[pd.Series]:
+    pass  # TODO

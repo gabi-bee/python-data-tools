@@ -7,3 +7,11 @@ def flag_leading_zeros(x: str):
         return 1
     else:
         return 0
+
+
+def count_chars_after_point(x: str):
+    """return count of characters after a '.' - can be used to get number of decimal places of number"""
+    if '.' in x:
+        return len(x.split('.')[1])
+    else:
+        return 0

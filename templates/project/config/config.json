@@ -1,0 +1,17 @@
+{
+  "project_details": {
+    "name": "Example",
+    "id": "001",
+    "description": "example project for testing code and using as a template"
+  },
+  "sql_connection": {
+    "sql_server": {
+      "server": "",
+      "db": "",
+      "schema": ""
+    },
+    "sqlite": {
+      "db_path": ""
+    }
+  }
+}

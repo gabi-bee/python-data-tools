@@ -63,3 +63,9 @@ def update_with_expected_cols(df: pd.DataFrame, expected_cols: list[str] = None,
             df_updated = df
 
     return df_updated
+
+
+def combine_series(ser1: pd.Series, ser2: pd.Series) -> pd.Series:
+    ser_combined = ser1.combine(ser2, min)
+    ser_combined = pd.concat([ser1, ser2], axis=0)
+    return ser_combined

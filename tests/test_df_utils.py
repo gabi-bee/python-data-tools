@@ -64,6 +64,23 @@ class DfUtilsTests(unittest.TestCase):
             expected_result = case['returns']
             self.assertTrue(result.equals(expected_result))
 
+    def test_combine_series(self):
+        """test combine_series fn"""
+
+        test_cases: list[dict[str, any]] = [
+            {'args': {'ser1': pd.Series(data={'a': 1, 'b': 2}),
+                      'ser2': pd.Series(data={'c': 0})},
+             'returns': pd.Series(data={'a': 1, 'b': 2, 'c': 0})},
+        ]
+
+        # test return equals expected
+        for case in test_cases:
+            result: pd.Series = combine_series(**case['args'])
+            expected_result = case['returns']
+            print(result)
+            print(expected_result)
+            self.assertTrue(result.astype(int).equals(expected_result))
+
 
 if __name__ == '__main__':
     unittest.main()

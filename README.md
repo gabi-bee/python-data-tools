@@ -10,3 +10,7 @@
 - create new virtual environment
 - run 'python -m pip install -r requirements.txt' to install requirements to your virtual environment
 - run python -m pip freeze > requirements.txt to update requirements based on your venv
+
+## Unittests:
+
+- run all project unittests: 'python -m unittest'

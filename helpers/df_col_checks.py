@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from utils.df_utils import get_dtype_cols_dict, update_with_expected_cols
+from utils.float_utils import flag_outlier
 from utils.str_utils import flag_leading_zeros, count_chars_after_point
 
 # columns expected in final results
@@ -13,11 +14,12 @@ expected_columns: dict[str, type] = {  # TODO update
     'str_len_min': int,
     'str_len_max': int,
     'float_max_dps': int,
-    'numeric_checksum': float,
-    'numeric_max': float,
-    'numeric_min': float,
-    'numeric_mean': float,
-    'numeric_std': float,
+    'num_checksum': float,
+    'num_max': float,
+    'num_min': float,
+    'num_mean': float,
+    'num_std': float,
+    'num_count_outliers': int,
 }
 
 
@@ -52,10 +54,10 @@ def run_suite_of_df_col_checks(df_inferred: pd.DataFrame, df_str: pd.DataFrame, 
 
     # run checks on numeric cols
     numeric_col_checks: list[Callable] = [  # TODO update
-        check_numeric_checksum,
-        check_numeric_max,
-        check_numeric_min,
-        check_numeric_mean
+        check_num_checksum,
+        check_num_max,
+        check_num_min,
+        check_num_mean
     ]
     numeric_cols = dtypes_dict['int64'] + dtypes_dict['float64']
     results += run_checks_on_cols(df_inferred, *numeric_col_checks, columns=numeric_cols)
@@ -103,8 +105,10 @@ def run_checks_on_cols(df: pd.DataFrame, *checks: Callable[[pd.DataFrame], list[
     return results
 
 
-def gen_map_handle_missing_vals(df: pd.DataFrame | pd.Series, map_fn: Callable) -> pd.DataFrame | pd.Series:
-    map_result = df.map(lambda x: map_fn(x) if not pd.isna(x) else np.nan)
+def gen_map_handle_missing_vals(df: pd.DataFrame | pd.Series,
+                                map_fn: Callable, **map_fn_kwargs) -> pd.DataFrame | pd.Series:
+    """apply mapping function and handle null values"""
+    map_result = df.map(lambda x: map_fn(x, **map_fn_kwargs) if not pd.isna(x) else np.nan)
     return map_result
 
 
@@ -122,7 +126,7 @@ def gen_aggregate_map(map_result: pd.DataFrame | pd.Series, agg_fn: str, name: s
     elif agg_fn == 'std':
         result = map_result.std()
     else:
-        # throw error
+        # TODO throw error
         pass
 
     if type(result) == pd.Series:
@@ -131,9 +135,9 @@ def gen_aggregate_map(map_result: pd.DataFrame | pd.Series, agg_fn: str, name: s
 
 
 def check_generic(df: pd.DataFrame | pd.Series, name: str,
-                  map_fn: Callable, agg_fn: str) -> list[pd.Series]:
+                  map_fn: Callable, agg_fn: str, **map_fn_kwargs) -> list[pd.Series]:
     """get check results"""
-    map_result = gen_map_handle_missing_vals(df, map_fn)
+    map_result = gen_map_handle_missing_vals(df, map_fn, **map_fn_kwargs)
     agg_result = gen_aggregate_map(map_result, agg_fn, name)
     return [agg_result]
 
@@ -149,9 +153,6 @@ def check_all_dtypes(df_inferred: pd.DataFrame) -> list[pd.Series]:
 def check_int_leading_zeros(df_str: pd.DataFrame) -> list[pd.Series]:
     """get col count of values with leading 0s"""
     return check_generic(df_str, 'int_leading_zeros', flag_leading_zeros, agg_fn='sum')
-    # int_leading_zeros = df_str.map(lambda x: flag_leading_zeros(x) if not pd.isna(x) else np.nan).sum()
-    # int_leading_zeros.name = 'int_leading_zeros'
-    # return [int_leading_zeros]
 
 
 def check_str_len_min_max_checksum(df_str: pd.DataFrame) -> list[pd.Series]:
@@ -161,48 +162,51 @@ def check_str_len_min_max_checksum(df_str: pd.DataFrame) -> list[pd.Series]:
     str_len_max = gen_aggregate_map(df_lens, 'max', 'str_len_max')
     str_len_checksum = gen_aggregate_map(df_lens, 'sum', 'str_len_checksum')
 
-    # df_lens = df_str.map(lambda x: len(x) if not pd.isna(x) else np.nan)
-    #
-    # str_len_min = df_lens.min()
-    # str_len_min.name = 'str_len_min'
-    #
-    # str_len_max = df_lens.max()
-    # str_len_max.name = 'str_len_max'
-    #
-    # str_len_checksum = df_lens.sum()
-    # str_len_checksum.name = 'str_len_checksum'
-
     return [str_len_min, str_len_max, str_len_checksum]
 
 
 def check_float_max_dps(df_str: pd.DataFrame) -> list[pd.Series]:
     """get col max decimal places"""
     return check_generic(df_str, 'float_max_dps', count_chars_after_point, agg_fn='max')
-    # float_max_dps = df_str.map(lambda x: count_chars_after_point(x) if not pd.isna(x) else np.nan).max()
-    # float_max_dps.name = 'float_max_dps'
-    # return [float_max_dps]
 
 
-def check_numeric_checksum(df_inferred: pd.DataFrame) -> list[pd.Series]:
+def check_num_checksum(df_inferred: pd.DataFrame) -> list[pd.Series]:
     """get col sum"""
-    return check_generic(df_inferred, 'numeric_checksum', lambda x: x, agg_fn='sum')
+    return check_generic(df_inferred, 'num_checksum', lambda x: x, agg_fn='sum')
 
 
-def check_numeric_max(df_inferred: pd.DataFrame) -> list[pd.Series]:
+def check_num_max(df_inferred: pd.DataFrame) -> list[pd.Series]:
     """get col max"""
-    return check_generic(df_inferred, 'numeric_max', lambda x: x, agg_fn='max')
+    return check_generic(df_inferred, 'num_max', lambda x: x, agg_fn='max')
 
 
-def check_numeric_min(df_inferred: pd.DataFrame) -> list[pd.Series]:
+def check_num_min(df_inferred: pd.DataFrame) -> list[pd.Series]:
     """get col min"""
-    return check_generic(df_inferred, 'numeric_min', lambda x: x, agg_fn='min')
+    return check_generic(df_inferred, 'num_min', lambda x: x, agg_fn='min')
 
 
-def check_numeric_mean(df_inferred: pd.DataFrame) -> list[pd.Series]:
+def check_num_mean(df_inferred: pd.DataFrame) -> list[pd.Series]:
     """get col mean"""
-    return check_generic(df_inferred, 'numeric_mean', lambda x: x, agg_fn='mean')
+    return check_generic(df_inferred, 'num_mean', lambda x: x, agg_fn='mean')
 
 
-def check_numeric_std(df_inferred: pd.DataFrame) -> list[pd.Series]:
+def check_num_std(df_inferred: pd.DataFrame) -> list[pd.Series]:
     """get col standard deviation"""
-    return check_generic(df_inferred, 'numeric_std', lambda x: x, agg_fn='std')
+    return check_generic(df_inferred, 'num_std', lambda x: x, agg_fn='std')
+
+
+def check_num_count_outliers(df_inferred: pd.DataFrame) -> list[pd.Series]:
+    """get col outlier count"""
+    [num_mean] = check_num_mean(df_inferred)
+    [num_std] = check_num_std(df_inferred)
+
+    results = {}
+    for col in df_inferred.columns:
+        mean = num_mean.loc[col]
+        std = num_std.loc[col]
+        [col_result] = check_generic(df_inferred[col], 'num_count_outliers', flag_outlier, agg_fn='sum', mean=mean,
+                                     std=std)
+        results[col] = col_result
+    num_count_outliers = pd.Series(data=results)
+    num_count_outliers.name = 'num_count_outliers'
+    return [num_count_outliers]

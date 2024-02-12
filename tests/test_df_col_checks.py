@@ -38,6 +38,18 @@ class DfChecksTests(unittest.TestCase):
             'float3': ['0.1234', np.nan],
             'int1': ['1', np.nan],
         },
+        'ex_num_count_outliers_examples': {
+            'int1': [0, 1, 9],
+            'int2': [5, 3, 7],
+            'int3': [-1, 0, np.nan],
+            'int4': [4, 6, np.nan],
+        },
+        'ex_num_count_outliers_examples2': {
+            'int5': [5.2, 9.8, 10.6, 11.2, 11.4, 10.1, 11.1, 10.0, 7.6, 9.0, 10.0, 9.4, 10.1, 7.3, 9.5, 9.0, 10.9, 9.9,
+                     10.2, 9.9, 9.9, 9.5, 8.8, 11.6, 10.4, 9.4],
+            'int6': [5.2, 9.8, 10.6, 11.2, 11.4, 10.1, 11.1, 10.0, 7.6, 9.0, 10.0, 9.4, 10.1, 7.3, 9.5, 9.0, 10.9, 9.9,
+                     10.2, 9.9, 9.9, 9.5, 8.8, 11.6, 10.4, 9.4],
+        }
     }
     dfs = {key: pd.DataFrame.from_dict(value) for key, value in _dict_to_df_examples.items()}
 
@@ -145,6 +157,27 @@ class DfChecksTests(unittest.TestCase):
 
             self.assertTrue(result.astype(int).equals(expected_result))
             self.assertEqual(result.name, 'float_max_dps')
+
+    def test_check_num_count_outliers(self):
+        """test check_num_count_outliers fn"""
+
+        test_cases: list[dict[str, any]] = [
+            # {'args': {'df_inferred': self.dfs['ex_num_count_outliers_examples']},
+            #  'returns': pd.Series(data={'int1': 3, 'int2': 0, 'int3': 2, 'int4': 0})},
+
+            {'args': {'df_inferred': self.dfs['ex_num_count_outliers_examples2']},
+             'returns': pd.Series(data={'int5': 1})},
+        ]
+
+        # test return equals expected
+        for case in test_cases:
+            [result] = check_num_count_outliers(**case['args'])  # single check in list
+            expected_result = case['returns']
+            print(result)
+            print(expected_result)
+
+            self.assertTrue(result.astype(int).equals(expected_result))
+            self.assertEqual(result.name, 'num_count_outliers')
 
 
 if __name__ == '__main__':
